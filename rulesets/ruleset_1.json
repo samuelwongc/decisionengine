@@ -1,0 +1,72 @@
+[
+    {
+        "rule_id": "1",
+        "rule": {
+            "type": "op",
+            "op": ">=",
+            "lvalue": {
+                "type": "constant",
+                "value": 1
+            },
+            "rvalue": {
+                "type": "op",
+                "op": "pow",
+                "lvalue": {
+                    "type": "input",
+                    "value": "a"
+                },
+                "rvalue": {
+                    "type": "constant",
+                    "value": 3
+                }
+            }
+        },
+        "true": {
+            "type": "return",
+            "value": "ACCEPT"
+        },
+        "false": {
+            "type": "goto",
+            "value": "2"
+        }
+    },
+    {
+        "rule_id": "2",
+        "rule": {
+            "type": "op",
+            "op": "&&",
+            "lvalue": {
+                "type": "op",
+                "op": ">=",
+                "lvalue": {
+                    "type": "input",
+                    "value": "b"
+                },
+                "rvalue": {
+                    "type": "constant",
+                    "value": 0
+                }
+            },
+            "rvalue": {
+                "type": "op",
+                "op": "<=",
+                "lvalue": {
+                    "type": "input",
+                    "value": "b"
+                },
+                "rvalue": {
+                    "type": "constant",
+                    "value": 10
+                }
+            }
+        },
+        "true": {
+            "type": "return",
+            "value": "ACCEPT"
+        },
+        "false": {
+            "type": "return",
+            "value": "REJECT"
+        }
+    }
+]
