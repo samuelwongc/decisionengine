@@ -20,11 +20,11 @@ fn main() {
         .read_to_string(&mut ruleset)
         .expect("Something went wrong while reading the ruleset file");
 
-    let parsed_ruleset : Vec<Value> = match serde_json::from_str(&ruleset) {
+    let parsed_ruleset: Vec<Value> = match serde_json::from_str(&ruleset) {
         Ok(json) => json,
-        Err(error) => panic!(format!("Malformed JSON: {}", error))
+        Err(error) => panic!(format!("Malformed JSON: {}", error)),
     };
-    
+
     let mut rules = HashMap::new();
     for rule in &parsed_ruleset {
         let r = decisionengine::deserialize_rule(rule);
@@ -38,11 +38,16 @@ fn main() {
         .read_to_string(&mut inputs)
         .expect("Something went wrong while reading the input file");
 
-    let parsed_inputs : Value = match serde_json::from_str(&inputs) {
+    let parsed_inputs: Value = match serde_json::from_str(&inputs) {
         Ok(json) => json,
-        Err(error) => panic!(format!("Malformed JSON: {}", error))
+        Err(error) => panic!(format!("Malformed JSON: {}", error)),
     };
     let input_values = decisionengine::deserialize_inputs(&parsed_inputs);
 
-    decisionengine::eval_rules(&rules, &input_values);
+    let result = decisionengine::eval_rules(&rules, &input_values);
+
+    match result {
+        decisionengine::EvalResult::Accept => println!("ACCEPT"),
+        decisionengine::EvalResult::Reject => println!("REJECT"),
+    };
 }
