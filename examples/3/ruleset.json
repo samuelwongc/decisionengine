@@ -1,0 +1,33 @@
+[
+    {
+        "rule_id": "1",
+        "rule": {
+            "type": "op",
+            "op": ">=",
+            "lvalue": {
+                "type": "constant",
+                "value": 10
+            },
+            "rvalue": {
+                "type": "op",
+                "op": "+",
+                "lvalue": {
+                    "type": "constant",
+                    "value": 3
+                },
+                "rvalue": {
+                    "type": "constant",
+                    "value": 3
+                }
+            }
+        },
+        "true": {
+            "type": "return",
+            "value": "ACCEPT"
+        },
+        "false": {
+            "type": "return",
+            "value": "REJECT"
+        }
+    }
+]

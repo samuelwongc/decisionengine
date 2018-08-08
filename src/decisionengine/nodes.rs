@@ -71,39 +71,56 @@ impl EvalNode for BinOpNode {
     }
 }
 
-pub fn deserialize_node(v: &Value) -> Box<EvalNode> {
-    match v["type"].as_str().unwrap() {
-        "input" => deserialize_input_node(v),
-        "op" => match v["op"].as_str().unwrap() {
-            "pow" => deserialize_bin_op_node(v, Box::new(PowerOperation {})),
-            ">=" => deserialize_bin_op_node(v, Box::new(GreaterThanOrEqualsOperation {})),
-            "<=" => deserialize_bin_op_node(v, Box::new(LessThanOrEqualsOperation {})),
-            "&&" => deserialize_bin_op_node(v, Box::new(AndOperation {})),
-            "+" => deserialize_bin_op_node(v, Box::new(AdditionOperation {})),
-            "==" => deserialize_bin_op_node(v, Box::new(EqualsOperation {})),
-            "array_contains" => deserialize_bin_op_node(v, Box::new(ArrayContainsOperation {})),
-            "regex_contains" => deserialize_bin_op_node(v, Box::new(RegexContainsOperation {})),
+pub fn deserialize_node(v: &Value) -> (Box<EvalNode>, bool) {
+    let node_type = v["type"].as_str().unwrap();
+    if node_type == "constant" {
+        deserialize_const_node(v)
+    } else if node_type == "input" {
+        deserialize_input_node(v)
+    } else {
+        match v["type"].as_str().unwrap() {
+            "op" => match v["op"].as_str().unwrap() {
+                "pow" => deserialize_bin_op_node(v, Box::new(PowerOperation {})),
+                ">=" => deserialize_bin_op_node(v, Box::new(GreaterThanOrEqualsOperation {})),
+                "<=" => deserialize_bin_op_node(v, Box::new(LessThanOrEqualsOperation {})),
+                "&&" => deserialize_bin_op_node(v, Box::new(AndOperation {})),
+                "+" => deserialize_bin_op_node(v, Box::new(AdditionOperation {})),
+                "==" => deserialize_bin_op_node(v, Box::new(EqualsOperation {})),
+                "array_contains" => deserialize_bin_op_node(v, Box::new(ArrayContainsOperation {})),
+                "regex_contains" => deserialize_bin_op_node(v, Box::new(RegexContainsOperation {})),
+                _ => panic!(format!(
+                    "Cannot deserialize: unknown operation {}",
+                    v["op"].to_string()
+                )),
+            },
             _ => panic!(format!(
-                "Cannot deserialize: unknown operation {}",
-                v["op"].to_string()
+                "Cannot deserialize node type: {}",
+                v["type"].to_string()
             )),
-        },
-        "constant" => deserialize_const_node(v),
-        _ => panic!(format!(
-            "Cannot deserialize node type: {}",
-            v["type"].to_string()
-        )),
+        }
     }
 }
 
-fn deserialize_bin_op_node(v: &Value, op: Box<BinaryOperation>) -> Box<EvalNode> {
-    let lvalue = deserialize_node(&v["lvalue"]);
-    let rvalue = deserialize_node(&v["rvalue"]);
-    Box::new(BinOpNode {
-        lvalue: lvalue,
-        rvalue: rvalue,
-        operation: op,
-    })
+fn deserialize_bin_op_node(v: &Value, op: Box<BinaryOperation>) -> (Box<EvalNode>, bool) {
+    let (lvalue, lconst) = deserialize_node(&v["lvalue"]);
+    let (rvalue, rconst) = deserialize_node(&v["rvalue"]);
+    if lconst && rconst {
+        (
+            Box::new(ConstantRootNode {
+                value: op.eval(&lvalue, &rvalue, &HashMap::new()),
+            }),
+            true,
+        )
+    } else {
+        (
+            Box::new(BinOpNode {
+                lvalue: lvalue,
+                rvalue: rvalue,
+                operation: op,
+            }),
+            false,
+        )
+    }
 }
 
 fn deserialize_const_node_value(v: &Value) -> NodeResult {
@@ -130,16 +147,16 @@ fn deserialize_const_node_value(v: &Value) -> NodeResult {
     ));
 }
 
-fn deserialize_const_node(v: &Value) -> Box<EvalNode> {
+fn deserialize_const_node(v: &Value) -> (Box<EvalNode>, bool) {
     let root = ConstantRootNode {
         value: deserialize_const_node_value(&v["value"]),
     };
-    Box::new(root)
+    (Box::new(root), true)
 }
 
-fn deserialize_input_node(v: &Value) -> Box<InputRootNode> {
+fn deserialize_input_node(v: &Value) -> (Box<EvalNode>, bool) {
     let root = InputRootNode {
         value: String::from(v["value"].as_str().unwrap()),
     };
-    Box::new(root)
+    (Box::new(root), false)
 }

@@ -75,9 +75,10 @@ fn deserialize_rule_decision(v: &Value) -> RuleDecision {
 }
 
 pub fn deserialize_rule(v: &Value) -> Rule {
+    let (node, _) = deserialize_node(&v["rule"]);
     Rule {
         rule_id: v["rule_id"].as_str().unwrap().parse::<i32>().unwrap(),
-        node: deserialize_node(&v["rule"]),
+        node: node,
         if_true: deserialize_rule_decision(&v["true"]),
         if_false: deserialize_rule_decision(&v["false"]),
     }
