@@ -6,35 +6,23 @@
             "op": "&&",
             "lvalue": {
                 "type": "op",
-                "op": ">=",
+                "op": "contains",
                 "lvalue": {
-                    "type": "input",
-                    "value": "a"
+                    "type": "constant",
+                    "value": [
+                        1,
+                        2,
+                        3
+                    ]
                 },
                 "rvalue": {
-                    "type": "constant",
-                    "value": 0
+                    "type": "input",
+                    "value": "a"
                 }
             },
             "rvalue": {
-                "type": "op",
-                "op": ">=",
-                "lvalue": {
-                    "type": "op",
-                    "op": "/",
-                    "lvalue": {
-                        "type": "constant",
-                        "value": "b"
-                    },
-                    "rvalue": {
-                        "type": "constant",
-                        "value": "a"
-                    }
-                },
-                "rvalue": {
-                    "type": "constant",
-                    "value": 5
-                }
+                "type": "constant",
+                "value": true
             }
         },
         "true": {

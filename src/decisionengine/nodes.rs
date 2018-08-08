@@ -6,9 +6,12 @@ use serde_json::Value;
 use decisionengine::operations::*;
 use decisionengine::InputValue;
 
+#[derive(Clone, PartialEq)]
 pub enum NodeResult {
     Numeric(i32),
     Boolean(bool),
+    Text(String),
+    Array(Vec<NodeResult>),
     Err(String),
 }
 
@@ -25,6 +28,8 @@ impl EvalNode for ConstantRootNode {
         match &self.value {
             &NodeResult::Boolean(b) => NodeResult::Boolean(b),
             &NodeResult::Numeric(n) => NodeResult::Numeric(n),
+            &NodeResult::Text(ref s) => NodeResult::Text(s.clone()),
+            &NodeResult::Array(ref a) => NodeResult::Array(a.clone()),
             NodeResult::Err(msg) => NodeResult::Err(msg.clone()),
         }
     }
@@ -34,13 +39,21 @@ struct InputRootNode {
     value: String,
 }
 
+fn input_value_to_node_result(value: &InputValue) -> NodeResult {
+    match value {
+        &InputValue::Boolean(b) => NodeResult::Boolean(b),
+        &InputValue::Numeric(n) => NodeResult::Numeric(n),
+        &InputValue::Text(ref s) => NodeResult::Text(s.clone()),
+        &InputValue::Array(ref a) => {
+            NodeResult::Array(a.into_iter().map(input_value_to_node_result).collect())
+        }
+    }
+}
+
 impl EvalNode for InputRootNode {
     fn eval(&self, input: &HashMap<String, InputValue>) -> NodeResult {
         match input.get(&self.value) {
-            Some(x) => match x {
-                &InputValue::Boolean(b) => NodeResult::Boolean(b),
-                &InputValue::Numeric(n) => NodeResult::Numeric(n),
-            },
+            Some(x) => input_value_to_node_result(x),
             None => NodeResult::Err(format!("Variable {} does not exist.", &self.value)),
         }
     }
@@ -68,6 +81,7 @@ pub fn deserialize_node(v: &Value) -> Box<EvalNode> {
             "&&" => deserialize_bin_op_node(v, Box::new(AndOperation {})),
             "+" => deserialize_bin_op_node(v, Box::new(AdditionOperation {})),
             "==" => deserialize_bin_op_node(v, Box::new(EqualsOperation {})),
+            "contains" => deserialize_bin_op_node(v, Box::new(ArrayContainsOperation {})),
             _ => panic!(format!(
                 "Cannot deserialize: unknown operation {}",
                 v["op"].to_string()
@@ -91,17 +105,33 @@ fn deserialize_bin_op_node(v: &Value, op: Box<BinaryOperation>) -> Box<EvalNode>
     })
 }
 
+fn deserialize_const_node_value(v: &Value) -> NodeResult {
+    if v.is_array() {
+        let array_value: Vec<NodeResult> = v.as_array()
+            .unwrap()
+            .iter()
+            .map(|v| deserialize_const_node_value(v))
+            .collect();
+        return NodeResult::Array(array_value);
+    }
+    if v.is_boolean() {
+        return NodeResult::Boolean(v.as_bool().unwrap());
+    }
+    if v.is_string() {
+        return NodeResult::Text(v.as_str().unwrap().to_string());
+    }
+    if v.is_i64() {
+        return NodeResult::Numeric(v.as_i64().unwrap() as i32);
+    }
+    panic!(format!(
+        "Can't deserialize constant input: {}",
+        v.to_string()
+    ));
+}
+
 fn deserialize_const_node(v: &Value) -> Box<EvalNode> {
-    let value = v["value"].as_str();
     let root = ConstantRootNode {
-        value: match value {
-            Some(b) => match b {
-                "true" => NodeResult::Boolean(true),
-                "false" => NodeResult::Boolean(false),
-                _ => panic!(format!("Unknown value: {}", value.unwrap())),
-            },
-            _ => NodeResult::Numeric(v["value"].as_i64().unwrap() as i32),
-        },
+        value: deserialize_const_node_value(&v["value"]),
     };
     Box::new(root)
 }

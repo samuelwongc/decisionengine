@@ -165,3 +165,21 @@ impl BinaryOperation for AndOperation {
         }
     }
 }
+
+pub struct ArrayContainsOperation {}
+
+impl BinaryOperation for ArrayContainsOperation {
+    fn eval(
+        &self,
+        lnode: &Box<EvalNode>,
+        rnode: &Box<EvalNode>,
+        inputs: &HashMap<String, InputValue>,
+    ) -> NodeResult {
+        match lnode.eval(inputs) {
+            NodeResult::Array(v) => NodeResult::Boolean(v.contains(&rnode.eval(inputs))),
+            _ => NodeResult::Err(String::from(
+                "lvalue of array_contains operation is not an array.",
+            )),
+        }
+    }
+}

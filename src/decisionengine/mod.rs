@@ -7,10 +7,12 @@ pub mod nodes;
 pub mod operations;
 use self::nodes::*;
 
-#[derive(Copy, Clone)]
+#[derive(Clone, PartialEq)]
 pub enum InputValue {
     Numeric(i32),
     Boolean(bool),
+    Text(String),
+    Array(Vec<InputValue>),
 }
 
 pub enum EvalResult {
@@ -39,8 +41,8 @@ impl Rule {
             } else {
                 &self.if_false
             },
-            NodeResult::Numeric(_) => panic!("Top level node in rule must return bool, int found."),
             NodeResult::Err(msg) => panic!(msg),
+            _ => panic!("Top level node in rule must return bool."),
         }
     }
 }
@@ -81,20 +83,30 @@ pub fn deserialize_rule(v: &Value) -> Rule {
     }
 }
 
+fn deserialize_input(v: &Value) -> InputValue {
+    if v.is_array() {
+        let array_value: Vec<InputValue> = v.as_array()
+            .unwrap()
+            .iter()
+            .map(|v| deserialize_input(v))
+            .collect();
+        return InputValue::Array(array_value);
+    }
+    if v.is_boolean() {
+        return InputValue::Boolean(v.as_bool().unwrap());
+    }
+    if v.is_string() {
+        return InputValue::Text(v.as_str().unwrap().to_string());
+    }
+    return InputValue::Numeric(v.as_i64().unwrap() as i32);
+}
+
 pub fn deserialize_inputs(v: &Value) -> HashMap<String, InputValue> {
     let raw_inputs = v.as_object().unwrap();
 
     let mut inputs = HashMap::new();
     for (k, v) in raw_inputs.iter() {
-        let input_value = match v.as_str() {
-            Some(s) => match s {
-                "false" => InputValue::Boolean(false),
-                "true" => InputValue::Boolean(true),
-                _ => panic!(format!("Unknown value: {}", s)),
-            },
-            None => InputValue::Numeric(v.as_i64().unwrap() as i32),
-        };
-        inputs.insert(k.clone(), input_value);
+        inputs.insert(k.clone(), deserialize_input(v));
     }
     inputs
 }
