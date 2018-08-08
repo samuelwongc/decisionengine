@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
@@ -13,23 +12,20 @@ mod decisionengine;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let mut ruleset_file = File::open(&args[1]).expect("Ruleset file not found");
+    let mut decision_strategy_file =
+        File::open(&args[1]).expect("decision_strategy file not found");
 
-    let mut ruleset = String::new();
-    ruleset_file
-        .read_to_string(&mut ruleset)
-        .expect("Something went wrong while reading the ruleset file");
+    let mut decision_strategy = String::new();
+    decision_strategy_file
+        .read_to_string(&mut decision_strategy)
+        .expect("Something went wrong while reading the decision_strategy file");
 
-    let parsed_ruleset: Vec<Value> = match serde_json::from_str(&ruleset) {
+    let decision_module_json: Value = match serde_json::from_str(&decision_strategy) {
         Ok(json) => json,
         Err(error) => panic!(format!("Malformed JSON: {}", error)),
     };
 
-    let mut rules = HashMap::new();
-    for rule in &parsed_ruleset {
-        let r = decisionengine::deserialize_rule(rule);
-        rules.insert(r.rule_id, r);
-    }
+    let decision_module = decisionengine::modules::deserialize_module(&decision_module_json);
 
     let mut inputs_file = File::open(&args[2]).expect("Input file not found");
 
@@ -42,9 +38,10 @@ fn main() {
         Ok(json) => json,
         Err(error) => panic!(format!("Malformed JSON: {}", error)),
     };
-    let input_values = decisionengine::deserialize_inputs(&parsed_inputs);
 
-    let result = decisionengine::eval_rules(&rules, &input_values);
+    let input_values = decisionengine::rules::deserialize_inputs(&parsed_inputs);
+
+    let result = decision_module.eval(&input_values);
 
     match result {
         decisionengine::EvalResult::Accept => println!("ACCEPT"),
