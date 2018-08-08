@@ -81,7 +81,8 @@ pub fn deserialize_node(v: &Value) -> Box<EvalNode> {
             "&&" => deserialize_bin_op_node(v, Box::new(AndOperation {})),
             "+" => deserialize_bin_op_node(v, Box::new(AdditionOperation {})),
             "==" => deserialize_bin_op_node(v, Box::new(EqualsOperation {})),
-            "contains" => deserialize_bin_op_node(v, Box::new(ArrayContainsOperation {})),
+            "array_contains" => deserialize_bin_op_node(v, Box::new(ArrayContainsOperation {})),
+            "regex_contains" => deserialize_bin_op_node(v, Box::new(RegexContainsOperation {})),
             _ => panic!(format!(
                 "Cannot deserialize: unknown operation {}",
                 v["op"].to_string()

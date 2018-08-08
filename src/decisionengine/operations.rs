@@ -1,3 +1,6 @@
+extern crate regex;
+
+use self::regex::Regex;
 use decisionengine::nodes::{EvalNode, NodeResult};
 use decisionengine::InputValue;
 use std::collections::HashMap;
@@ -179,6 +182,35 @@ impl BinaryOperation for ArrayContainsOperation {
             NodeResult::Array(v) => NodeResult::Boolean(v.contains(&rnode.eval(inputs))),
             _ => NodeResult::Err(String::from(
                 "lvalue of array_contains operation is not an array.",
+            )),
+        }
+    }
+}
+
+pub struct RegexContainsOperation {}
+
+impl BinaryOperation for RegexContainsOperation {
+    fn eval(
+        &self,
+        lnode: &Box<EvalNode>,
+        rnode: &Box<EvalNode>,
+        inputs: &HashMap<String, InputValue>,
+    ) -> NodeResult {
+        match lnode.eval(inputs) {
+            NodeResult::Text(t) => match rnode.eval(inputs) {
+                NodeResult::Text(pattern) => {
+                    let p = Regex::new(&pattern);
+                    match p {
+                        Ok(p) => NodeResult::Boolean(p.is_match(&t)),
+                        _ => NodeResult::Err(format!("Invalid regular expression {}", pattern)),
+                    }
+                }
+                _ => NodeResult::Err(String::from(
+                    "rvalue of regex_contains operation is not an string.",
+                )),
+            },
+            _ => NodeResult::Err(String::from(
+                "lvalue of array_contains operation is not an string.",
             )),
         }
     }

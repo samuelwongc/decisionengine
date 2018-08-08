@@ -6,7 +6,7 @@
             "op": "&&",
             "lvalue": {
                 "type": "op",
-                "op": "contains",
+                "op": "array_contains",
                 "lvalue": {
                     "type": "constant",
                     "value": [
@@ -21,8 +21,16 @@
                 }
             },
             "rvalue": {
-                "type": "constant",
-                "value": true
+                "type": "op",
+                "op": "regex_contains",
+                "lvalue": {
+                    "type": "input",
+                    "value": "b"
+                },
+                "rvalue": {
+                    "type": "constant",
+                    "value": "abc"
+                }
             }
         },
         "true": {
