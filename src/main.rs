@@ -15,36 +15,29 @@ fn main() {
     let mut decision_strategy_file =
         File::open(&args[1]).expect("decision_strategy file not found");
 
-    let mut decision_strategy = String::new();
-    decision_strategy_file
-        .read_to_string(&mut decision_strategy)
-        .expect("Something went wrong while reading the decision_strategy file");
+    let decision_module = decisionengine::DecisionEngine::from_file(&mut decision_strategy_file);
 
-    let decision_module_json: Value = match serde_json::from_str(&decision_strategy) {
-        Ok(json) => json,
-        Err(error) => panic!(format!("Malformed JSON: {}", error)),
-    };
+    let input_file_names = args.get(2..args.len()).unwrap();
 
-    let decision_module = decisionengine::modules::deserialize_module(&decision_module_json);
+    for input_file_name in input_file_names {
+        let mut input_file =
+            File::open(input_file_name).expect(&format!("File {} not found.", input_file_name));
+        let mut inputs = String::new();
+        input_file
+            .read_to_string(&mut inputs)
+            .expect("Something went wrong while reading the input file");
 
-    let mut inputs_file = File::open(&args[2]).expect("Input file not found");
+        let parsed_inputs: Value = match serde_json::from_str(&inputs) {
+            Ok(json) => json,
+            Err(error) => panic!(format!("Malformed JSON: {}", error)),
+        };
+        let input_values = decisionengine::rules::deserialize_inputs(&parsed_inputs);
 
-    let mut inputs = String::new();
-    inputs_file
-        .read_to_string(&mut inputs)
-        .expect("Something went wrong while reading the input file");
+        let result = decision_module.eval(&input_values);
 
-    let parsed_inputs: Value = match serde_json::from_str(&inputs) {
-        Ok(json) => json,
-        Err(error) => panic!(format!("Malformed JSON: {}", error)),
-    };
-
-    let input_values = decisionengine::rules::deserialize_inputs(&parsed_inputs);
-
-    let result = decision_module.eval(&input_values);
-
-    match result {
-        decisionengine::EvalResult::Accept => println!("ACCEPT"),
-        decisionengine::EvalResult::Reject => println!("REJECT"),
-    };
+        match result {
+            decisionengine::EvalResult::Accept => println!("{} [ACCEPT]", input_file_name),
+            decisionengine::EvalResult::Reject => println!("{} [REJECT]", input_file_name),
+        };
+    }
 }
