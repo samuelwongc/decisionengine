@@ -1,22 +1,17 @@
-use std::collections::HashMap;
+use decisionengine::datasource::DecisionDataset;
 use std::fs::File;
 use std::io::prelude::*;
 
+extern crate serde;
 extern crate serde_json;
+
 use serde_json::Value;
 
+pub mod datasource;
 pub mod modules;
 pub mod nodes;
 pub mod operations;
 pub mod rules;
-
-#[derive(Clone, PartialEq)]
-pub enum InputValue {
-    Numeric(i32),
-    Boolean(bool),
-    Text(String),
-    Array(Vec<InputValue>),
-}
 
 #[derive(PartialEq)]
 pub enum EvalResult {
@@ -25,7 +20,7 @@ pub enum EvalResult {
 }
 
 pub trait Evaluatable {
-    fn eval(&self, input: &HashMap<String, InputValue>) -> EvalResult;
+    fn eval(&self, input: &DecisionDataset) -> EvalResult;
 }
 
 pub struct DecisionEngine {}

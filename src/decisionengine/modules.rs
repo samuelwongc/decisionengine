@@ -1,17 +1,17 @@
 extern crate serde_json;
 
+use decisionengine::datasource::DecisionDataset;
 use serde_json::Value;
-use std::collections::HashMap;
 
 use decisionengine::rules::deserialize_rule;
-use decisionengine::{EvalResult, Evaluatable, InputValue};
+use decisionengine::{EvalResult, Evaluatable};
 
 pub struct PassAllModule {
     children: Vec<Box<Evaluatable>>,
 }
 
 impl Evaluatable for PassAllModule {
-    fn eval(&self, input: &HashMap<String, InputValue>) -> EvalResult {
+    fn eval(&self, input: &DecisionDataset) -> EvalResult {
         for child in &self.children {
             if child.eval(input) == EvalResult::Reject {
                 return EvalResult::Reject;

@@ -1,4 +1,7 @@
 {
-    "a": 0,
-    "b": 3
+    "application_data_v1": {
+        "age": 30,
+        "first_name": "Tony",
+        "last_name": "Stark"
+    }
 }

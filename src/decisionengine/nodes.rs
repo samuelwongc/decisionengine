@@ -1,10 +1,10 @@
-use std::collections::HashMap;
+use decisionengine::datasource::deserialize_input_node;
+use decisionengine::datasource::DecisionDataset;
 
 extern crate serde_json;
 use serde_json::Value;
 
 use decisionengine::operations::*;
-use decisionengine::InputValue;
 
 #[derive(Clone, PartialEq)]
 pub enum NodeResult {
@@ -16,7 +16,7 @@ pub enum NodeResult {
 }
 
 pub trait EvalNode {
-    fn eval(&self, input: &HashMap<String, InputValue>) -> NodeResult;
+    fn eval(&self, input: &DecisionDataset) -> NodeResult;
 }
 
 struct ConstantRootNode {
@@ -24,37 +24,13 @@ struct ConstantRootNode {
 }
 
 impl EvalNode for ConstantRootNode {
-    fn eval(&self, _: &HashMap<String, InputValue>) -> NodeResult {
+    fn eval(&self, _: &DecisionDataset) -> NodeResult {
         match &self.value {
             &NodeResult::Boolean(b) => NodeResult::Boolean(b),
             &NodeResult::Numeric(n) => NodeResult::Numeric(n),
             &NodeResult::Text(ref s) => NodeResult::Text(s.clone()),
             &NodeResult::Array(ref a) => NodeResult::Array(a.clone()),
             NodeResult::Err(msg) => NodeResult::Err(msg.clone()),
-        }
-    }
-}
-
-struct InputRootNode {
-    value: String,
-}
-
-fn input_value_to_node_result(value: &InputValue) -> NodeResult {
-    match value {
-        &InputValue::Boolean(b) => NodeResult::Boolean(b),
-        &InputValue::Numeric(n) => NodeResult::Numeric(n),
-        &InputValue::Text(ref s) => NodeResult::Text(s.clone()),
-        &InputValue::Array(ref a) => {
-            NodeResult::Array(a.into_iter().map(input_value_to_node_result).collect())
-        }
-    }
-}
-
-impl EvalNode for InputRootNode {
-    fn eval(&self, input: &HashMap<String, InputValue>) -> NodeResult {
-        match input.get(&self.value) {
-            Some(x) => input_value_to_node_result(x),
-            None => NodeResult::Err(format!("Variable {} does not exist.", &self.value)),
         }
     }
 }
@@ -66,7 +42,7 @@ struct BinOpNode {
 }
 
 impl EvalNode for BinOpNode {
-    fn eval(&self, input: &HashMap<String, InputValue>) -> NodeResult {
+    fn eval(&self, input: &DecisionDataset) -> NodeResult {
         self.operation.eval(&self.lvalue, &self.rvalue, input)
     }
 }
@@ -76,7 +52,7 @@ pub fn deserialize_node(v: &Value) -> (Box<EvalNode>, bool) {
     if node_type == "constant" {
         deserialize_const_node(v)
     } else if node_type == "input" {
-        deserialize_input_node(v)
+        deserialize_input_node(v["value"].as_str().unwrap())
     } else {
         match v["type"].as_str().unwrap() {
             "op" => match v["op"].as_str().unwrap() {
@@ -107,7 +83,7 @@ fn deserialize_bin_op_node(v: &Value, op: Box<BinaryOperation>) -> (Box<EvalNode
     if lconst && rconst {
         (
             Box::new(ConstantRootNode {
-                value: op.eval(&lvalue, &rvalue, &HashMap::new()),
+                value: op.eval(&lvalue, &rvalue, &DecisionDataset::get_empty()),
             }),
             true,
         )
@@ -152,11 +128,4 @@ fn deserialize_const_node(v: &Value) -> (Box<EvalNode>, bool) {
         value: deserialize_const_node_value(&v["value"]),
     };
     (Box::new(root), true)
-}
-
-fn deserialize_input_node(v: &Value) -> (Box<EvalNode>, bool) {
-    let root = InputRootNode {
-        value: String::from(v["value"].as_str().unwrap()),
-    };
-    (Box::new(root), false)
 }

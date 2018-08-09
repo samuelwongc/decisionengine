@@ -1,16 +1,15 @@
 extern crate regex;
 
 use self::regex::Regex;
+use decisionengine::datasource::DecisionDataset;
 use decisionengine::nodes::{EvalNode, NodeResult};
-use decisionengine::InputValue;
-use std::collections::HashMap;
 
 pub trait BinaryOperation {
     fn eval(
         &self,
         lnode: &Box<EvalNode>,
         rnode: &Box<EvalNode>,
-        inputs: &HashMap<String, InputValue>,
+        inputs: &DecisionDataset,
     ) -> NodeResult;
 }
 
@@ -21,7 +20,7 @@ impl BinaryOperation for AdditionOperation {
         &self,
         lnode: &Box<EvalNode>,
         rnode: &Box<EvalNode>,
-        inputs: &HashMap<String, InputValue>,
+        inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Numeric(l) => match rnode.eval(inputs) {
@@ -46,7 +45,7 @@ impl BinaryOperation for EqualsOperation {
         &self,
         lnode: &Box<EvalNode>,
         rnode: &Box<EvalNode>,
-        inputs: &HashMap<String, InputValue>,
+        inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Numeric(l) => match rnode.eval(inputs) {
@@ -75,7 +74,7 @@ impl BinaryOperation for PowerOperation {
         &self,
         lnode: &Box<EvalNode>,
         rnode: &Box<EvalNode>,
-        inputs: &HashMap<String, InputValue>,
+        inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Numeric(l) => match rnode.eval(inputs) {
@@ -100,7 +99,7 @@ impl BinaryOperation for GreaterThanOrEqualsOperation {
         &self,
         lnode: &Box<EvalNode>,
         rnode: &Box<EvalNode>,
-        inputs: &HashMap<String, InputValue>,
+        inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Numeric(l) => match rnode.eval(inputs) {
@@ -125,7 +124,7 @@ impl BinaryOperation for LessThanOrEqualsOperation {
         &self,
         lnode: &Box<EvalNode>,
         rnode: &Box<EvalNode>,
-        inputs: &HashMap<String, InputValue>,
+        inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Numeric(l) => match rnode.eval(inputs) {
@@ -150,7 +149,7 @@ impl BinaryOperation for AndOperation {
         &self,
         lnode: &Box<EvalNode>,
         rnode: &Box<EvalNode>,
-        inputs: &HashMap<String, InputValue>,
+        inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Boolean(true) => match rnode.eval(inputs) {
@@ -176,7 +175,7 @@ impl BinaryOperation for ArrayContainsOperation {
         &self,
         lnode: &Box<EvalNode>,
         rnode: &Box<EvalNode>,
-        inputs: &HashMap<String, InputValue>,
+        inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Array(v) => NodeResult::Boolean(v.contains(&rnode.eval(inputs))),
@@ -194,7 +193,7 @@ impl BinaryOperation for RegexContainsOperation {
         &self,
         lnode: &Box<EvalNode>,
         rnode: &Box<EvalNode>,
-        inputs: &HashMap<String, InputValue>,
+        inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Text(t) => match rnode.eval(inputs) {

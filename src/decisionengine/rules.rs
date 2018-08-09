@@ -1,10 +1,11 @@
+use decisionengine::datasource::DecisionDataset;
 use std::collections::HashMap;
 
 extern crate serde_json;
 use serde_json::Value;
 
 use decisionengine::nodes::*;
-use decisionengine::{EvalResult, Evaluatable, InputValue};
+use decisionengine::{EvalResult, Evaluatable};
 
 pub struct Rule {
     pub rule_id: i32,
@@ -12,7 +13,7 @@ pub struct Rule {
 }
 
 impl Evaluatable for Rule {
-    fn eval(&self, input: &HashMap<String, InputValue>) -> EvalResult {
+    fn eval(&self, input: &DecisionDataset) -> EvalResult {
         let mut curr_condition_id = 1;
         loop {
             let result = match &self.conditions.get(&curr_condition_id) {
@@ -42,7 +43,7 @@ pub struct Condition {
 }
 
 impl Condition {
-    fn eval(&self, input: &HashMap<String, InputValue>) -> &ConditionResult {
+    fn eval(&self, input: &DecisionDataset) -> &ConditionResult {
         match self.node.eval(input) {
             NodeResult::Boolean(b) => if b {
                 &self.if_true
@@ -88,32 +89,4 @@ pub fn deserialize_condition(v: &Value) -> Condition {
         if_true: deserialize_condition_decision(&v["true"]),
         if_false: deserialize_condition_decision(&v["false"]),
     }
-}
-
-fn deserialize_input(v: &Value) -> InputValue {
-    if v.is_array() {
-        let array_value: Vec<InputValue> = v.as_array()
-            .unwrap()
-            .iter()
-            .map(|v| deserialize_input(v))
-            .collect();
-        return InputValue::Array(array_value);
-    }
-    if v.is_boolean() {
-        return InputValue::Boolean(v.as_bool().unwrap());
-    }
-    if v.is_string() {
-        return InputValue::Text(v.as_str().unwrap().to_string());
-    }
-    return InputValue::Numeric(v.as_i64().unwrap() as i32);
-}
-
-pub fn deserialize_inputs(v: &Value) -> HashMap<String, InputValue> {
-    let raw_inputs = v.as_object().unwrap();
-
-    let mut inputs = HashMap::new();
-    for (k, v) in raw_inputs.iter() {
-        inputs.insert(k.clone(), deserialize_input(v));
-    }
-    inputs
 }
