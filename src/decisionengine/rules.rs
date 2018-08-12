@@ -9,20 +9,27 @@ use decisionengine::{EvalResult, Evaluatable};
 
 pub struct Rule {
     pub rule_id: i32,
+    pub rule_name: String,
     conditions: HashMap<i32, Condition>,
 }
 
 impl Evaluatable for Rule {
-    fn eval(&self, input: &DecisionDataset) -> EvalResult {
+    fn eval(&mut self, input: &DecisionDataset) -> EvalResult {
         let mut curr_condition_id = 1;
         loop {
-            let result = match &self.conditions.get(&curr_condition_id) {
-                Some(condition) => condition.eval(input),
+            let result = match self.conditions.get_mut(&curr_condition_id) {
+                Some(mut condition) => condition.eval(input),
                 _ => panic!("Condition not found."),
             };
             match result {
-                ConditionResult::Accept => return EvalResult::Accept,
-                ConditionResult::Reject => return EvalResult::Reject,
+                ConditionResult::Accept => {
+                    println!("    Rule: {} [ACCEPT]", self.rule_name);
+                    return EvalResult::Accept;
+                }
+                ConditionResult::Reject => {
+                    println!("    Rule: {} [REJECT]", self.rule_name);
+                    return EvalResult::Reject;
+                }
                 &ConditionResult::Condition(condition_id) => curr_condition_id = condition_id,
             }
         }
@@ -43,7 +50,7 @@ pub struct Condition {
 }
 
 impl Condition {
-    fn eval(&self, input: &DecisionDataset) -> &ConditionResult {
+    fn eval(&mut self, input: &DecisionDataset) -> &ConditionResult {
         match self.node.eval(input) {
             NodeResult::Boolean(b) => if b {
                 &self.if_true
@@ -64,6 +71,7 @@ pub fn deserialize_rule(v: &Value) -> Rule {
     }
 
     Rule {
+        rule_name: v["rule_name"].as_str().unwrap().to_string(),
         rule_id: v["rule_id"].as_i64().unwrap() as i32,
         conditions: conditions,
     }

@@ -1,10 +1,12 @@
 {
     "type": "module",
     "module_type": "all",
+    "module_name": "Predecline",
     "children": [
         {
             "type": "rule",
             "rule_id": 1,
+            "rule_name": "Age is between 18 and 75 (inclusive)",
             "conditions": [
                 {
                     "type": "condition",
@@ -14,7 +16,7 @@
                         "op": ">=",
                         "lvalue": {
                             "type": "constant",
-                            "value": 80
+                            "value": 75
                         },
                         "rvalue": {
                             "type": "input",
@@ -32,7 +34,7 @@
                 },
                 {
                     "type": "condition",
-                    "condition_id": "1",
+                    "condition_id": "2",
                     "condition": {
                         "type": "op",
                         "op": ">=",
@@ -43,6 +45,68 @@
                         "rvalue": {
                             "type": "constant",
                             "value": 18
+                        }
+                    },
+                    "true": {
+                        "type": "return",
+                        "value": "ACCEPT"
+                    },
+                    "false": {
+                        "type": "return",
+                        "value": "REJECT"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "rule",
+            "rule_id": 2,
+            "rule_name": "Credit score is greater than 750",
+            "conditions": [
+                {
+                    "type": "condition",
+                    "condition_id": "1",
+                    "condition": {
+                        "type": "op",
+                        "op": ">=",
+                        "lvalue": {
+                            "type": "input",
+                            "value": "experian_v1_1.score"
+                        },
+                        "rvalue": {
+                            "type": "constant",
+                            "value": 750
+                        }
+                    },
+                    "true": {
+                        "type": "return",
+                        "value": "ACCEPT"
+                    },
+                    "false": {
+                        "type": "return",
+                        "value": "REJECT"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "rule",
+            "rule_id": 3,
+            "rule_name": "Debt is less than 500",
+            "conditions": [
+                {
+                    "type": "condition",
+                    "condition_id": "1",
+                    "condition": {
+                        "type": "op",
+                        "op": "<=",
+                        "lvalue": {
+                            "type": "input",
+                            "value": "experian_v1_1.debt"
+                        },
+                        "rvalue": {
+                            "type": "constant",
+                            "value": 500
                         }
                     },
                     "true": {

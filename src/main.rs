@@ -16,14 +16,15 @@ fn main() {
     let mut decision_strategy_file =
         File::open(&args[1]).expect(&format!("File {} not found", &args[1]));
 
-    let decision_module = decisionengine::DecisionEngine::from_file(&mut decision_strategy_file);
+    let mut decision_module =
+        decisionengine::DecisionEngine::from_file(&mut decision_strategy_file);
 
     let input_file_names = args.get(2..args.len()).unwrap();
 
     for input_file_name in input_file_names {
         let mut input_file =
             File::open(input_file_name).expect(&format!("File {} not found.", input_file_name));
-
+        println!("\n{} [START]", input_file_name);
         let mut inputs = String::new();
         input_file
             .read_to_string(&mut inputs)

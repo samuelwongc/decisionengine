@@ -11,16 +11,17 @@ pub mod datasource;
 pub mod modules;
 pub mod nodes;
 pub mod operations;
+pub mod results;
 pub mod rules;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum EvalResult {
     Accept,
     Reject,
 }
 
 pub trait Evaluatable {
-    fn eval(&self, input: &DecisionDataset) -> EvalResult;
+    fn eval(&mut self, input: &DecisionDataset) -> EvalResult;
 }
 
 pub struct DecisionEngine {}
