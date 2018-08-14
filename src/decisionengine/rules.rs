@@ -1,4 +1,5 @@
 use decisionengine::datasource::DecisionDataset;
+use decisionengine::visitor::DecisionTreeVisitor;
 use std::collections::HashMap;
 
 extern crate serde_json;
@@ -10,7 +11,7 @@ use decisionengine::{EvalResult, Evaluatable};
 pub struct Rule {
     pub rule_id: i32,
     pub rule_name: String,
-    conditions: HashMap<i32, Condition>,
+    pub conditions: HashMap<i32, Condition>,
 }
 
 impl Evaluatable for Rule {
@@ -23,16 +24,19 @@ impl Evaluatable for Rule {
             };
             match result {
                 ConditionResult::Accept => {
-                    println!("    Rule: {} [ACCEPT]", self.rule_name);
                     return EvalResult::Accept;
                 }
                 ConditionResult::Reject => {
-                    println!("    Rule: {} [REJECT]", self.rule_name);
                     return EvalResult::Reject;
                 }
                 &ConditionResult::Condition(condition_id) => curr_condition_id = condition_id,
             }
         }
+    }
+
+    fn accept<V: DecisionTreeVisitor>(&mut self, visitor: &mut V) {
+        visitor.visit_rule(self);
+        visitor.leave_rule(self);
     }
 }
 
@@ -59,6 +63,20 @@ impl Condition {
             },
             NodeResult::Err(msg) => panic!(msg),
             _ => panic!("Top level node in condition must return bool."),
+        }
+    }
+
+    pub fn deserialize(value: &Value) -> Self {
+        let (node, _) = deserialize_node(&value["condition"]);
+        Condition {
+            condition_id: value["condition_id"]
+                .as_str()
+                .unwrap()
+                .parse::<i32>()
+                .unwrap(),
+            node: node,
+            if_true: deserialize_condition_decision(&value["true"]),
+            if_false: deserialize_condition_decision(&value["false"]),
         }
     }
 }

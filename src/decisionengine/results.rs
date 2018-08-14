@@ -1,6 +1,4 @@
 use decisionengine::datasource::DecisionDataset;
-use decisionengine::rules::Condition;
-use decisionengine::rules::Rule;
 use decisionengine::EvalResult;
 use decisionengine::Evaluatable;
 
@@ -8,53 +6,54 @@ trait ResultAggregate {
     fn set_result(&mut self, result: EvalResult);
 }
 
-struct DecisionResult {
+#[derive(Serialize, Deserialize)]
+pub struct DecisionResult {
     application_id: u64,
     result: EvalResult,
     module_results: Vec<ModuleResult>,
 }
 
-enum SubmoduleResult {
+#[derive(Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SubmoduleResult {
     ModuleResult(ModuleResult),
     RuleResult(RuleResult),
 }
 
-struct ModuleResult {
-    result: EvalResult,
-    module_id: String,
-    submodule_results: Vec<SubmoduleResult>,
+#[derive(Serialize, Deserialize)]
+pub struct ModuleResult {
+    pub result: EvalResult,
+    pub module_id: String,
+    pub submodule_results: Vec<SubmoduleResult>,
 }
 
-struct RuleResult {
-    result: EvalResult,
-    rule_id: String,
-}
-
-struct ResultAggregator {
-    result: ResultAggregate,
-}
-
-impl ResultAggregator {
-    pub fn set_result(&mut self, eval_result: EvalResult) {
-        self.result.set_result(eval_result)
+impl ModuleResult {
+    pub fn add_submodule_result(&mut self, result: SubmoduleResult) {
+        self.submodule_results.push(result);
     }
 }
 
-struct ResultAggregatingDecorator<'a, T>
-where
-    T: Evaluatable,
-{
-    t: T,
-    result: &'a mut ResultAggregate,
+#[derive(Serialize, Deserialize)]
+pub struct RuleResult {
+    pub result: EvalResult,
+    pub rule_id: i32,
 }
 
-impl<'a, T> Evaluatable for ResultAggregatingDecorator<'a, T>
-where
-    T: Evaluatable,
-{
-    fn eval(&mut self, input: &DecisionDataset) -> EvalResult {
-        let eval_result = self.t.eval(input);
-        self.result.set_result(eval_result.clone());
-        eval_result
-    }
-}
+// pub struct ResultAggregatingDecorator<'a, T>
+// where
+//     T: Evaluatable,
+// {
+//     t: T,
+//     result: &'a mut ResultAggregate,
+// }
+
+// impl<'a, T> Evaluatable for ResultAggregatingDecorator<'a, T>
+// where
+//     T: Evaluatable,
+// {
+//     fn eval(&mut self, input: &DecisionDataset) -> EvalResult {
+//         let eval_result = self.t.eval(input);
+//         self.result.set_result(eval_result.clone());
+//         eval_result
+//     }
+// }
