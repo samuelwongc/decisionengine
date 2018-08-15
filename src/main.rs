@@ -1,26 +1,52 @@
+extern crate clap;
+extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate serde_json;
 
-use std::env;
+use clap::{App, Arg};
 use std::fs::File;
 use std::io::prelude::*;
-
-extern crate serde;
-extern crate serde_json;
 
 mod decisionengine;
 use decisionengine::Evaluatable;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let matches = App::new("Decisioning Engine")
+        .version("0.1alpha")
+        .arg(
+            Arg::with_name("ruleset")
+                .help("Sets the input ruleset file to use")
+                .required(true)
+                .index(1),
+        )
+        .arg(
+            Arg::with_name("inputs")
+                .short("i")
+                .long("inputs")
+                .value_name("INPUTS")
+                .multiple(true)
+                .help("Input files")
+                .required(true)
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("detailed")
+                .short("d")
+                .long("detailed")
+                .help("Evaluates entire decision tree without short-circuiting and returns result at all nodes"),
+        )
+        .get_matches();
 
     let mut decision_strategy_file =
-        File::open(&args[1]).expect(&format!("File {} not found", &args[1]));
+        File::open(matches.value_of("ruleset").unwrap()).expect(&format!("Rule file not found"));
 
     let mut decision_module =
         decisionengine::DecisionEngine::from_file(&mut decision_strategy_file);
 
-    let input_file_names = args.get(2..args.len()).unwrap();
+    let input_file_names = matches.values_of("inputs").unwrap();
+
+    let detailed = matches.is_present("detailed");
 
     for input_file_name in input_file_names {
         let mut input_file =
@@ -38,29 +64,31 @@ fn main() {
 
         let result = decision_module.eval(&input_values);
 
-        let detailed_result = decisionengine::results::SubmoduleResult::ModuleResult(
-            decisionengine::results::ModuleResult {
-                module_id: String::from("CBRF Silver"),
-                result: result.clone(),
-                submodule_results: Vec::new(),
-            },
-        );
-
-        let mut visitor = decisionengine::visitor::ResultAggregatingVisitor {
-            stack: decisionengine::visitor::ResultStack::new(detailed_result),
-            input: input_values,
-        };
-
-        decision_module.accept(&mut visitor);
-
-        println!(
-            "{}",
-            serde_json::to_string(visitor.stack.get_result()).unwrap()
-        );
-
         match result {
             decisionengine::EvalResult::Accept => println!("{} [ACCEPT]", input_file_name),
             decisionengine::EvalResult::Reject => println!("{} [REJECT]", input_file_name),
         };
+
+        if detailed {
+            let detailed_result = decisionengine::results::SubmoduleResult::ModuleResult(
+                decisionengine::results::ModuleResult {
+                    module_id: String::from("CBRF Silver"),
+                    result: result.clone(),
+                    submodule_results: Vec::new(),
+                },
+            );
+
+            let mut visitor = decisionengine::visitor::ResultAggregatingVisitor {
+                stack: decisionengine::visitor::ResultStack::new(detailed_result),
+                input: input_values,
+            };
+
+            decision_module.accept(&mut visitor);
+
+            println!(
+                "{}",
+                serde_json::to_string_pretty(visitor.stack.get_result()).unwrap()
+            );
+        }
     }
 }
