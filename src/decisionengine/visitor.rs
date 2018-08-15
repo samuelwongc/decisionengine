@@ -72,10 +72,7 @@ impl ResultStack {
 
         let curr = std::mem::replace(&mut self.curr, None);
 
-        let ResultStackElement {
-            prev: mut prev,
-            value: value,
-        } = *curr.unwrap();
+        let ResultStackElement { mut prev, value } = *curr.unwrap();
 
         match prev.as_mut().unwrap().value() {
             SubmoduleResult::ModuleResult(ref mut res) => {

@@ -1,6 +1,4 @@
-use decisionengine::datasource::DecisionDataset;
 use decisionengine::EvalResult;
-use decisionengine::Evaluatable;
 
 trait ResultAggregate {
     fn set_result(&mut self, result: EvalResult);
@@ -38,22 +36,3 @@ pub struct RuleResult {
     pub result: EvalResult,
     pub rule_id: i32,
 }
-
-// pub struct ResultAggregatingDecorator<'a, T>
-// where
-//     T: Evaluatable,
-// {
-//     t: T,
-//     result: &'a mut ResultAggregate,
-// }
-
-// impl<'a, T> Evaluatable for ResultAggregatingDecorator<'a, T>
-// where
-//     T: Evaluatable,
-// {
-//     fn eval(&mut self, input: &DecisionDataset) -> EvalResult {
-//         let eval_result = self.t.eval(input);
-//         self.result.set_result(eval_result.clone());
-//         eval_result
-//     }
-// }
