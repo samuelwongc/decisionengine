@@ -7,8 +7,8 @@ use decisionengine::nodes::{EvalNode, NodeResult};
 pub trait BinaryOperation {
     fn eval(
         &self,
-        lnode: &Box<EvalNode>,
-        rnode: &Box<EvalNode>,
+        lnode: &mut Box<EvalNode>,
+        rnode: &mut Box<EvalNode>,
         inputs: &DecisionDataset,
     ) -> NodeResult;
 }
@@ -18,8 +18,8 @@ pub struct AdditionOperation {}
 impl BinaryOperation for AdditionOperation {
     fn eval(
         &self,
-        lnode: &Box<EvalNode>,
-        rnode: &Box<EvalNode>,
+        lnode: &mut Box<EvalNode>,
+        rnode: &mut Box<EvalNode>,
         inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
@@ -43,8 +43,8 @@ pub struct EqualsOperation {}
 impl BinaryOperation for EqualsOperation {
     fn eval(
         &self,
-        lnode: &Box<EvalNode>,
-        rnode: &Box<EvalNode>,
+        lnode: &mut Box<EvalNode>,
+        rnode: &mut Box<EvalNode>,
         inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
@@ -72,8 +72,8 @@ pub struct PowerOperation {}
 impl BinaryOperation for PowerOperation {
     fn eval(
         &self,
-        lnode: &Box<EvalNode>,
-        rnode: &Box<EvalNode>,
+        lnode: &mut Box<EvalNode>,
+        rnode: &mut Box<EvalNode>,
         inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
@@ -97,8 +97,8 @@ pub struct GreaterThanOrEqualsOperation {}
 impl BinaryOperation for GreaterThanOrEqualsOperation {
     fn eval(
         &self,
-        lnode: &Box<EvalNode>,
-        rnode: &Box<EvalNode>,
+        lnode: &mut Box<EvalNode>,
+        rnode: &mut Box<EvalNode>,
         inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
@@ -122,8 +122,8 @@ pub struct LessThanOrEqualsOperation {}
 impl BinaryOperation for LessThanOrEqualsOperation {
     fn eval(
         &self,
-        lnode: &Box<EvalNode>,
-        rnode: &Box<EvalNode>,
+        lnode: &mut Box<EvalNode>,
+        rnode: &mut Box<EvalNode>,
         inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
@@ -147,8 +147,8 @@ pub struct AndOperation {}
 impl BinaryOperation for AndOperation {
     fn eval(
         &self,
-        lnode: &Box<EvalNode>,
-        rnode: &Box<EvalNode>,
+        lnode: &mut Box<EvalNode>,
+        rnode: &mut Box<EvalNode>,
         inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
@@ -173,8 +173,8 @@ pub struct ArrayContainsOperation {}
 impl BinaryOperation for ArrayContainsOperation {
     fn eval(
         &self,
-        lnode: &Box<EvalNode>,
-        rnode: &Box<EvalNode>,
+        lnode: &mut Box<EvalNode>,
+        rnode: &mut Box<EvalNode>,
         inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
@@ -191,8 +191,8 @@ pub struct RegexContainsOperation {}
 impl BinaryOperation for RegexContainsOperation {
     fn eval(
         &self,
-        lnode: &Box<EvalNode>,
-        rnode: &Box<EvalNode>,
+        lnode: &mut Box<EvalNode>,
+        rnode: &mut Box<EvalNode>,
         inputs: &DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {

@@ -1,52 +1,35 @@
 {
     "type": "module",
     "module_type": "all",
+    "module_name": "Fraud watch list",
     "children": [
         {
             "type": "rule",
             "rule_id": 1,
+            "rule_name": "Not known fraud",
             "conditions": [
                 {
+                    "type": "condition",
                     "condition_id": "1",
                     "condition": {
                         "type": "op",
-                        "op": "&&",
+                        "op": "regex_contains",
                         "lvalue": {
-                            "type": "op",
-                            "op": "array_contains",
-                            "lvalue": {
-                                "type": "constant",
-                                "value": [
-                                    1,
-                                    2,
-                                    3
-                                ]
-                            },
-                            "rvalue": {
-                                "type": "input",
-                                "value": "a"
-                            }
+                            "type": "input",
+                            "value": "application_data_v1.first_name"
                         },
                         "rvalue": {
-                            "type": "op",
-                            "op": "regex_contains",
-                            "lvalue": {
-                                "type": "input",
-                                "value": "b"
-                            },
-                            "rvalue": {
-                                "type": "constant",
-                                "value": "abc"
-                            }
+                            "type": "constant",
+                            "value": "Fraudster"
                         }
                     },
                     "true": {
                         "type": "return",
-                        "value": "ACCEPT"
+                        "value": "REJECT"
                     },
                     "false": {
                         "type": "return",
-                        "value": "REJECT"
+                        "value": "ACCEPT"
                     }
                 }
             ]

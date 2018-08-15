@@ -9,6 +9,7 @@ extern crate serde;
 extern crate serde_json;
 
 mod decisionengine;
+use decisionengine::Evaluatable;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -16,14 +17,14 @@ fn main() {
     let mut decision_strategy_file =
         File::open(&args[1]).expect(&format!("File {} not found", &args[1]));
 
-    let decision_module = decisionengine::DecisionEngine::from_file(&mut decision_strategy_file);
+    let mut decision_module =
+        decisionengine::DecisionEngine::from_file(&mut decision_strategy_file);
 
     let input_file_names = args.get(2..args.len()).unwrap();
 
     for input_file_name in input_file_names {
         let mut input_file =
             File::open(input_file_name).expect(&format!("File {} not found.", input_file_name));
-
         let mut inputs = String::new();
         input_file
             .read_to_string(&mut inputs)
@@ -36,6 +37,26 @@ fn main() {
             };
 
         let result = decision_module.eval(&input_values);
+
+        let detailed_result = decisionengine::results::SubmoduleResult::ModuleResult(
+            decisionengine::results::ModuleResult {
+                module_id: String::from("CBRF Silver"),
+                result: result.clone(),
+                submodule_results: Vec::new(),
+            },
+        );
+
+        let mut visitor = decisionengine::visitor::ResultAggregatingVisitor {
+            stack: decisionengine::visitor::ResultStack::new(detailed_result),
+            input: input_values,
+        };
+
+        decision_module.accept(&mut visitor);
+
+        println!(
+            "{}",
+            serde_json::to_string(visitor.stack.get_result()).unwrap()
+        );
 
         match result {
             decisionengine::EvalResult::Accept => println!("{} [ACCEPT]", input_file_name),

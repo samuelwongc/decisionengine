@@ -14,7 +14,7 @@ pub struct DecisionDataInputNode {
 }
 
 impl EvalNode for DecisionDataInputNode {
-    fn eval(&self, decision_dataset: &DecisionDataset) -> NodeResult {
+    fn eval(&mut self, decision_dataset: &DecisionDataset) -> NodeResult {
         (self.handler)(decision_dataset)
     }
 }

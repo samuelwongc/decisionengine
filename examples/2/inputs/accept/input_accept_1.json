@@ -1,4 +1,11 @@
 {
-    "a": 1,
-    "b": "abc"
+    "application_data_v1": {
+        "age": 40,
+        "first_name": "Tim",
+        "last_name": "Duncan"
+    },
+    "experian_v1_1": {
+        "score": 8000,
+        "debt": 0
+    }
 }

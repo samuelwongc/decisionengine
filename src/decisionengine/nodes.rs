@@ -16,7 +16,7 @@ pub enum NodeResult {
 }
 
 pub trait EvalNode {
-    fn eval(&self, input: &DecisionDataset) -> NodeResult;
+    fn eval(&mut self, input: &DecisionDataset) -> NodeResult;
 }
 
 struct ConstantRootNode {
@@ -24,7 +24,7 @@ struct ConstantRootNode {
 }
 
 impl EvalNode for ConstantRootNode {
-    fn eval(&self, _: &DecisionDataset) -> NodeResult {
+    fn eval(&mut self, _: &DecisionDataset) -> NodeResult {
         match &self.value {
             &NodeResult::Boolean(b) => NodeResult::Boolean(b),
             &NodeResult::Numeric(n) => NodeResult::Numeric(n),
@@ -42,8 +42,9 @@ struct BinOpNode {
 }
 
 impl EvalNode for BinOpNode {
-    fn eval(&self, input: &DecisionDataset) -> NodeResult {
-        self.operation.eval(&self.lvalue, &self.rvalue, input)
+    fn eval(&mut self, input: &DecisionDataset) -> NodeResult {
+        self.operation
+            .eval(&mut self.lvalue, &mut self.rvalue, input)
     }
 }
 
@@ -78,12 +79,12 @@ pub fn deserialize_node(v: &Value) -> (Box<EvalNode>, bool) {
 }
 
 fn deserialize_bin_op_node(v: &Value, op: Box<BinaryOperation>) -> (Box<EvalNode>, bool) {
-    let (lvalue, lconst) = deserialize_node(&v["lvalue"]);
-    let (rvalue, rconst) = deserialize_node(&v["rvalue"]);
+    let (mut lvalue, lconst) = deserialize_node(&v["lvalue"]);
+    let (mut rvalue, rconst) = deserialize_node(&v["rvalue"]);
     if lconst && rconst {
         (
             Box::new(ConstantRootNode {
-                value: op.eval(&lvalue, &rvalue, &DecisionDataset::get_empty()),
+                value: op.eval(&mut lvalue, &mut rvalue, &DecisionDataset::get_empty()),
             }),
             true,
         )
