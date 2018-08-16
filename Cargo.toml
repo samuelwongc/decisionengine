@@ -3,7 +3,14 @@ name = "decisionengine"
 version = "0.1.0"
 authors = ["Samuel Wong <samuel.wong@pay4later.com>"]
 
+[dependencies.iron]
+version = "*"
+
+[dependencies.bodyparser]
+git = "https://github.com/iron/body-parser.git"
+
 [dependencies]
+hyper = "0.12"
 serde = "1.0.66"
 serde_derive = "1.0.71"
 serde_json = "1.0"

@@ -25,7 +25,7 @@ pub enum EvalResult {
 }
 
 pub trait Evaluatable {
-    fn eval(&mut self, input: &DecisionDataset) -> EvalResult;
+    fn eval(&mut self, input: &mut DecisionDataset) -> EvalResult;
     fn accept<V: DecisionTreeVisitor>(&mut self, visitor: &mut V);
 }
 

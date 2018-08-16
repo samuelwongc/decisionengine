@@ -1,11 +1,5 @@
 {
-    "application_data_v1": {
-        "age": 30,
-        "first_name": "Peter",
-        "last_name": "Parker"
-    },
-    "experian_v1_1": {
-        "score": 500,
-        "debt": 1000
-    }
+    "age": 30,
+    "first_name": "Peter",
+    "last_name": "Parker"
 }

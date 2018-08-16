@@ -15,7 +15,7 @@ pub struct Rule {
 }
 
 impl Evaluatable for Rule {
-    fn eval(&mut self, input: &DecisionDataset) -> EvalResult {
+    fn eval(&mut self, input: &mut DecisionDataset) -> EvalResult {
         let mut curr_condition_id = 1;
         loop {
             let result = match self.conditions.get_mut(&curr_condition_id) {
@@ -54,7 +54,7 @@ pub struct Condition {
 }
 
 impl Condition {
-    fn eval(&mut self, input: &DecisionDataset) -> &ConditionResult {
+    fn eval(&mut self, input: &mut DecisionDataset) -> &ConditionResult {
         match self.node.eval(input) {
             NodeResult::Boolean(b) => if b {
                 &self.if_true

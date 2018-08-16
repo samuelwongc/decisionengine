@@ -16,7 +16,7 @@ pub enum NodeResult {
 }
 
 pub trait EvalNode {
-    fn eval(&mut self, input: &DecisionDataset) -> NodeResult;
+    fn eval(&mut self, input: &mut DecisionDataset) -> NodeResult;
 }
 
 struct ConstantRootNode {
@@ -24,7 +24,7 @@ struct ConstantRootNode {
 }
 
 impl EvalNode for ConstantRootNode {
-    fn eval(&mut self, _: &DecisionDataset) -> NodeResult {
+    fn eval(&mut self, _: &mut DecisionDataset) -> NodeResult {
         match &self.value {
             &NodeResult::Boolean(b) => NodeResult::Boolean(b),
             &NodeResult::Numeric(n) => NodeResult::Numeric(n),
@@ -42,7 +42,7 @@ struct BinOpNode {
 }
 
 impl EvalNode for BinOpNode {
-    fn eval(&mut self, input: &DecisionDataset) -> NodeResult {
+    fn eval(&mut self, input: &mut DecisionDataset) -> NodeResult {
         self.operation
             .eval(&mut self.lvalue, &mut self.rvalue, input)
     }
@@ -84,7 +84,7 @@ fn deserialize_bin_op_node(v: &Value, op: Box<BinaryOperation>) -> (Box<EvalNode
     if lconst && rconst {
         (
             Box::new(ConstantRootNode {
-                value: op.eval(&mut lvalue, &mut rvalue, &DecisionDataset::get_empty()),
+                value: op.eval(&mut lvalue, &mut rvalue, &mut DecisionDataset::get_empty()),
             }),
             true,
         )

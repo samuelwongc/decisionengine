@@ -32,7 +32,7 @@ impl PassAllModule {
 }
 
 impl Evaluatable for PassAllModule {
-    fn eval(&mut self, input: &DecisionDataset) -> EvalResult {
+    fn eval(&mut self, input: &mut DecisionDataset) -> EvalResult {
         for child in &mut self.children {
             let result = match child {
                 ModuleChildren::Rule(rule) => rule.eval(input),

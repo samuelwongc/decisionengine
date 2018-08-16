@@ -92,7 +92,7 @@ impl ResultStack {
 impl DecisionTreeVisitor for ResultAggregatingVisitor {
     fn visit_pass_all_module(&mut self, module: &mut PassAllModule) {
         self.stack
-            .new_module(module.module_name.clone(), module.eval(&self.input));
+            .new_module(module.module_name.clone(), module.eval(&mut self.input));
     }
 
     fn leave_pass_all_module(&mut self, _module: &mut PassAllModule) {
@@ -104,7 +104,7 @@ impl DecisionTreeVisitor for ResultAggregatingVisitor {
             SubmoduleResult::ModuleResult(ref mut res) => {
                 res.add_submodule_result(SubmoduleResult::RuleResult(RuleResult {
                     rule_id: rule.rule_id,
-                    result: rule.eval(&self.input),
+                    result: rule.eval(&mut self.input),
                 }));
             }
             _ => panic!("Something went wrong during visiting rule"),

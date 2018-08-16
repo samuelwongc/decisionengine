@@ -9,7 +9,7 @@ pub trait BinaryOperation {
         &self,
         lnode: &mut Box<EvalNode>,
         rnode: &mut Box<EvalNode>,
-        inputs: &DecisionDataset,
+        inputs: &mut DecisionDataset,
     ) -> NodeResult;
 }
 
@@ -20,7 +20,7 @@ impl BinaryOperation for AdditionOperation {
         &self,
         lnode: &mut Box<EvalNode>,
         rnode: &mut Box<EvalNode>,
-        inputs: &DecisionDataset,
+        inputs: &mut DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Numeric(l) => match rnode.eval(inputs) {
@@ -45,7 +45,7 @@ impl BinaryOperation for EqualsOperation {
         &self,
         lnode: &mut Box<EvalNode>,
         rnode: &mut Box<EvalNode>,
-        inputs: &DecisionDataset,
+        inputs: &mut DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Numeric(l) => match rnode.eval(inputs) {
@@ -74,7 +74,7 @@ impl BinaryOperation for PowerOperation {
         &self,
         lnode: &mut Box<EvalNode>,
         rnode: &mut Box<EvalNode>,
-        inputs: &DecisionDataset,
+        inputs: &mut DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Numeric(l) => match rnode.eval(inputs) {
@@ -99,7 +99,7 @@ impl BinaryOperation for GreaterThanOrEqualsOperation {
         &self,
         lnode: &mut Box<EvalNode>,
         rnode: &mut Box<EvalNode>,
-        inputs: &DecisionDataset,
+        inputs: &mut DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Numeric(l) => match rnode.eval(inputs) {
@@ -124,7 +124,7 @@ impl BinaryOperation for LessThanOrEqualsOperation {
         &self,
         lnode: &mut Box<EvalNode>,
         rnode: &mut Box<EvalNode>,
-        inputs: &DecisionDataset,
+        inputs: &mut DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Numeric(l) => match rnode.eval(inputs) {
@@ -149,7 +149,7 @@ impl BinaryOperation for AndOperation {
         &self,
         lnode: &mut Box<EvalNode>,
         rnode: &mut Box<EvalNode>,
-        inputs: &DecisionDataset,
+        inputs: &mut DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Boolean(true) => match rnode.eval(inputs) {
@@ -175,7 +175,7 @@ impl BinaryOperation for ArrayContainsOperation {
         &self,
         lnode: &mut Box<EvalNode>,
         rnode: &mut Box<EvalNode>,
-        inputs: &DecisionDataset,
+        inputs: &mut DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Array(v) => NodeResult::Boolean(v.contains(&rnode.eval(inputs))),
@@ -193,7 +193,7 @@ impl BinaryOperation for RegexContainsOperation {
         &self,
         lnode: &mut Box<EvalNode>,
         rnode: &mut Box<EvalNode>,
-        inputs: &DecisionDataset,
+        inputs: &mut DecisionDataset,
     ) -> NodeResult {
         match lnode.eval(inputs) {
             NodeResult::Text(t) => match rnode.eval(inputs) {
