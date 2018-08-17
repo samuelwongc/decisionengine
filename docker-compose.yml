@@ -1,0 +1,26 @@
+version: '3'
+services:
+  dev:
+    build: .
+    working_dir: /app
+    ports:
+     - "4000:3000"
+    volumes:
+      - .:/app
+    links:
+      - postgres
+    env_file:
+      - .env
+
+  postgres:
+    image: postgres:9.6
+    volumes:
+      - ~/postgres-data-decisioning:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: decisioning
+      POSTGRES_PASSWORD: decisioning
+      POSTGRES_DB: decisioning
+    ports:
+      - "${HOST_POSTGRES_PORT}:5432"
+    env_file:
+      - .env

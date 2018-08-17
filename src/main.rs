@@ -17,22 +17,35 @@ extern crate iron;
 use iron::prelude::*;
 use iron::status;
 
+#[macro_use]
+extern crate diesel;
+extern crate dotenv;
+
+use diesel::pg::PgConnection;
+use diesel::prelude::*;
+use dotenv::dotenv;
+use std::env;
+
 #[derive(Serialize, Deserialize, Clone)]
 struct DecisionRequest {
     application_data: decisionengine::datasource::applicationdata::ApplicationDataV1,
-    decision_strategy_id: u32,
+    decision_strategy_id: i32,
+}
+
+pub fn establish_connection() -> PgConnection {
+    dotenv().ok();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
 }
 
 fn decision(req: &mut Request) -> IronResult<Response> {
+    let connection = establish_connection();
+
     let struct_body = req.get::<bodyparser::Struct<DecisionRequest>>();
     match struct_body {
         Ok(Some(request)) => {
-            let mut decision_strategy_file = File::open(format!(
-                "examples/{}/ruleset.json",
-                request.decision_strategy_id
-            )).expect(&format!("Rule file not found"));
             let mut decision_module =
-                decisionengine::DecisionEngine::from_file(&mut decision_strategy_file);
+                decisionengine::DecisionEngine::from_id(request.decision_strategy_id, &connection);
 
             let mut decision_dataset =
                 decisionengine::datasource::DecisionDataset::new(request.application_data);

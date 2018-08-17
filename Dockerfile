@@ -4,7 +4,9 @@ WORKDIR /app
 
 ADD . /app
 
+RUN cargo install diesel_cli
 RUN cargo build
+RUN diesel migration run
 
 EXPOSE 3000
 
