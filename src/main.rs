@@ -1,30 +1,29 @@
+extern crate bodyparser;
 extern crate clap;
+#[macro_use]
+extern crate diesel;
+extern crate dotenv;
+extern crate iron;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate router;
 extern crate serde_json;
 
 use clap::{App, Arg};
+use diesel::pg::PgConnection;
+use diesel::prelude::*;
+use dotenv::dotenv;
+use iron::mime::Mime;
+use iron::prelude::*;
+use iron::status;
+use router::Router;
+use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 
 mod decisionengine;
 use decisionengine::Evaluatable;
-
-extern crate bodyparser;
-extern crate iron;
-
-use iron::prelude::*;
-use iron::status;
-
-#[macro_use]
-extern crate diesel;
-extern crate dotenv;
-
-use diesel::pg::PgConnection;
-use diesel::prelude::*;
-use dotenv::dotenv;
-use std::env;
 
 #[derive(Serialize, Deserialize, Clone)]
 struct DecisionRequest {
@@ -38,14 +37,42 @@ pub fn establish_connection() -> PgConnection {
     PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
 }
 
+fn create_decision_strategy(req: &mut Request) -> IronResult<Response> {
+    let connection = establish_connection();
+
+    let body = req.get::<bodyparser::Raw>();
+    let content_type = "application/json".parse::<Mime>().unwrap();
+
+    match body {
+        Ok(Some(json)) => {
+            let decision_strategy_json = serde_json::from_str(&json);
+            let decision_strategy = decisionengine::DecisionStrategy::create(
+                decision_strategy_json.unwrap(),
+                &connection,
+            );
+            return Ok(Response::with((
+                content_type,
+                status::Ok,
+                format!(
+                    "{{\"decision_strategy_id\": {}}}",
+                    decision_strategy.decision_strategy_id()
+                ),
+            )));
+        }
+        _ => Ok(Response::with(status::BadRequest)),
+    }
+}
+
 fn decision(req: &mut Request) -> IronResult<Response> {
     let connection = establish_connection();
 
     let struct_body = req.get::<bodyparser::Struct<DecisionRequest>>();
     match struct_body {
         Ok(Some(request)) => {
-            let mut decision_module =
-                decisionengine::DecisionEngine::from_id(request.decision_strategy_id, &connection);
+            let mut decision_module = decisionengine::DecisionStrategy::from_id(
+                request.decision_strategy_id,
+                &connection,
+            ).get_module();
 
             let mut decision_dataset =
                 decisionengine::datasource::DecisionDataset::new(request.application_data);
@@ -64,8 +91,15 @@ fn decision(req: &mut Request) -> IronResult<Response> {
 }
 
 fn server() {
-    let chain = Chain::new(decision);
-    Iron::new(chain).http("0.0.0.0:3000").unwrap();
+    let mut router = Router::new();
+    router.post("/decision", decision, "decision");
+    router.post(
+        "/decisionstrategy",
+        create_decision_strategy,
+        "decision_strategy_crate",
+    );
+
+    Iron::new(router).http("0.0.0.0:3000").unwrap();
 }
 
 fn cli(matches: clap::ArgMatches) {

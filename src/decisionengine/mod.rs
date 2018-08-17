@@ -1,3 +1,4 @@
+extern crate diesel;
 extern crate serde;
 extern crate serde_json;
 
@@ -15,6 +16,7 @@ pub mod visitor;
 
 use decisionengine::datasource::DecisionDataset;
 use decisionengine::modules::PassAllModule;
+use decisionengine::schema::decision_strategy;
 use decisionengine::visitor::DecisionTreeVisitor;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -33,8 +35,50 @@ pub trait Evaluatable {
 }
 
 #[derive(Queryable)]
-struct DecisionStrategy {
+pub struct DecisionStrategy {
     decision_strategy_id: i32,
+    decision_strategy_json: serde_json::Value,
+}
+
+impl DecisionStrategy {
+    pub fn from_id(id: i32, connection: &PgConnection) -> Self {
+        use decisionengine::schema::decision_strategy::dsl::*;
+
+        let ds: DecisionStrategy = decision_strategy
+            .find(id)
+            .first::<DecisionStrategy>(connection)
+            .expect("Error loading decision strategy");
+
+        ds
+    }
+
+    pub fn decision_strategy_id(&self) -> i32 {
+        self.decision_strategy_id
+    }
+
+    pub fn get_module(&self) -> Box<PassAllModule> {
+        Box::from(self::modules::deserialize_module(
+            &self.decision_strategy_json,
+        ))
+    }
+
+    pub fn create(json: Value, connection: &PgConnection) -> DecisionStrategy {
+        use decisionengine::schema::decision_strategy;
+
+        let new_decision_strategy = NewDecisionStrategy {
+            decision_strategy_json: json,
+        };
+
+        diesel::insert_into(decision_strategy::table)
+            .values(&new_decision_strategy)
+            .get_result(connection)
+            .expect("Error saving new post")
+    }
+}
+
+#[derive(Insertable)]
+#[table_name = "decision_strategy"]
+struct NewDecisionStrategy {
     decision_strategy_json: serde_json::Value,
 }
 
@@ -54,17 +98,6 @@ impl DecisionEngine {
 
         Box::from(self::modules::deserialize_module(&decision_module_json))
     }
-
-    pub fn from_id(id: i32, connection: &PgConnection) -> Box<PassAllModule> {
-        use decisionengine::schema::decision_strategy::dsl::*;
-
-        let ds: DecisionStrategy = decision_strategy
-            .find(id)
-            .first::<DecisionStrategy>(connection)
-            .expect("Error loading decision strategy");
-
-        Box::from(self::modules::deserialize_module(
-            &ds.decision_strategy_json,
-        ))
-    }
 }
+
+pub fn create() {}
