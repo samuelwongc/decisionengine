@@ -52,7 +52,7 @@ fn decision(req: &mut Request) -> IronResult<Response> {
 
 fn server() {
     let chain = Chain::new(decision);
-    Iron::new(chain).http("localhost:3000").unwrap();
+    Iron::new(chain).http("0.0.0.0:3000").unwrap();
 }
 
 fn cli(matches: clap::ArgMatches) {
@@ -120,7 +120,7 @@ fn main() {
         .arg(
             Arg::with_name("ruleset")
                 .help("Sets the input ruleset file to use")
-                .required(true)
+                .required(false)
                 .index(1),
         )
         .arg(
@@ -130,7 +130,7 @@ fn main() {
                 .value_name("INPUTS")
                 .multiple(true)
                 .help("Input files")
-                .required(true)
+                .required(false)
                 .takes_value(true),
         )
         .arg(
