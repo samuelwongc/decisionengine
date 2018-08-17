@@ -29,6 +29,7 @@ use decisionengine::Evaluatable;
 struct DecisionRequest {
     application_data: decisionengine::datasource::applicationdata::ApplicationDataV1,
     decision_strategy_id: i32,
+    detailed: Option<bool>,
 }
 
 pub fn establish_connection() -> PgConnection {
@@ -66,6 +67,7 @@ fn create_decision_strategy(req: &mut Request) -> IronResult<Response> {
 fn decision(req: &mut Request) -> IronResult<Response> {
     let connection = establish_connection();
 
+    let content_type = "application/json".parse::<Mime>().unwrap();
     let struct_body = req.get::<bodyparser::Struct<DecisionRequest>>();
     match struct_body {
         Ok(Some(request)) => {
@@ -78,13 +80,44 @@ fn decision(req: &mut Request) -> IronResult<Response> {
                 decisionengine::datasource::DecisionDataset::new(request.application_data);
 
             let result = decision_module.eval(&mut decision_dataset);
-            return Ok(Response::with((
-                status::Ok,
-                match result {
-                    decisionengine::EvalResult::Accept => "ACCEPT",
-                    _ => "REJECT",
-                },
-            )));
+            if request.detailed.is_none() || !request.detailed.unwrap() {
+                return Ok(Response::with((
+                    content_type,
+                    status::Ok,
+                    match result {
+                        decisionengine::EvalResult::Accept => "{ \"result\": \"accept\" }",
+                        _ => "{ \"result\": \"reject\" }",
+                    },
+                )));
+            } else {
+                let detailed_result = decisionengine::results::SubmoduleResult::ModuleResult(
+                    decisionengine::results::ModuleResult {
+                        module_id: String::from("CBRF Silver"),
+                        result: result.clone(),
+                        submodule_results: Vec::new(),
+                    },
+                );
+
+                let mut visitor = decisionengine::visitor::ResultAggregatingVisitor {
+                    stack: decisionengine::visitor::ResultStack::new(detailed_result),
+                    input: decision_dataset,
+                };
+
+                decision_module.accept(&mut visitor);
+
+                return Ok(Response::with((
+                    content_type,
+                    status::Ok,
+                    format!(
+                        "{{ \"result\": \"{}\", \"details\": {} }}",
+                        match result {
+                            decisionengine::EvalResult::Accept => "accept",
+                            _ => "reject",
+                        },
+                        serde_json::to_string(visitor.stack.get_result()).unwrap()
+                    ),
+                )));
+            }
         }
         _ => Ok(Response::with(status::BadRequest)),
     }
