@@ -3,6 +3,7 @@ services:
   dev:
     build: .
     working_dir: /app
+    command: diesel migration run
     ports:
      - "4000:3000"
     volumes:
