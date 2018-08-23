@@ -3,30 +3,33 @@ locals {
 }
 
 resource "aws_ecs_service" "decisioning" {
-  name = "decisioning-${terraform.workspace}"
-  cluster = "${aws_ecs_cluster.cluster.id}"
+  name            = "decisioning-${terraform.workspace}"
+  cluster         = "${aws_ecs_cluster.cluster.id}"
   task_definition = "${aws_ecs_task_definition.decisioning.arn}"
-  desired_count = 1
+  desired_count   = 1
+
   depends_on = [
     "aws_iam_role_policy.decisioning-ec2",
-    "aws_lb.decisioning"]
+    "aws_lb.decisioning",
+  ]
 
   load_balancer {
     target_group_arn = "${aws_lb_target_group.decisioning.arn}"
-    container_name = "${local.container_name}"
-    container_port = 80
+    container_name   = "decisioning-${terraform.workspace}"
+    container_port   = 80
   }
 }
 
 resource "aws_ecs_task_definition" "decisioning" {
-  family = "decisioning-${terraform.workspace}"
+  family        = "decisioning-${terraform.workspace}"
   task_role_arn = "${aws_iam_role.decisioning-ecs.arn}"
+
   container_definitions = <<EOF
 [
   {
     "essential": true,
     "image": "${var.docker_image}",
-    "name": "${local.container_name}",
+    "name": "decisioning-${terraform.workspace}",
     "memory": 128,
     "portMappings": [
       {

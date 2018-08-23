@@ -46,12 +46,22 @@ variable "instance_type" {
   default = "t2.small"
 }
 
-variable "key_name" {
-  description = "The aws ssh key name."
-}
-
 variable "full_infrastructure" {
   description = "Create a full infrastructure? - \"true\" or \"false\""
+}
+
+variable "amis" {
+  type = "map"
+
+  default = {
+    eu-west-1 = "ami-1d46df64"
+    eu-west-2 = "ami-67cbd003"
+  }
+}
+
+variable "ssh_key_name" {
+  description = "Name of the SSH key to deploy"
+  default     = "SamuelWong"
 }
 
 locals {

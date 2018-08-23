@@ -1,21 +1,25 @@
 resource "aws_lb" "decisioning" {
-  name      = "decisioning-${terraform.workspace}"
-  internal  = false
-  subnets   = ["${data.aws_subnet_ids.public.ids}"]
+  name            = "decisioning-${terraform.workspace}"
+  internal        = false
+  subnets         = ["${data.aws_subnet_ids.public.ids}"]
   security_groups = ["${aws_security_group.decisioning.id}"]
 }
 
+output "endpoint" {
+  value = "${aws_lb.decisioning.dns_name}"
+}
+
 resource "aws_lb_target_group" "decisioning" {
-  name     = "decisioning-${terraform.workspace}"
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = "${var.vpc}"
+  name                 = "decisioning-${terraform.workspace}"
+  port                 = 80
+  protocol             = "HTTP"
+  vpc_id               = "${var.vpc}"
   deregistration_delay = 35
 }
 
 resource "aws_autoscaling_attachment" "decisioning" {
- autoscaling_group_name = "${aws_autoscaling_group.decisioning.id}"
- alb_target_group_arn   = "${aws_lb_target_group.decisioning.arn}"
+  autoscaling_group_name = "${aws_autoscaling_group.decisioning.id}"
+  alb_target_group_arn   = "${aws_lb_target_group.decisioning.arn}"
 }
 
 resource "aws_lb_listener" "http" {
@@ -69,9 +73,9 @@ resource "aws_security_group" "ephemeral_from_lb" {
   vpc_id      = "${var.vpc}"
 
   ingress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "TCP"
+    from_port       = 0
+    to_port         = 65535
+    protocol        = "TCP"
     security_groups = ["${aws_security_group.decisioning.id}"]
   }
 
@@ -89,4 +93,3 @@ resource "aws_security_group" "ephemeral_from_lb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
