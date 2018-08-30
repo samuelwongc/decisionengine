@@ -35,6 +35,31 @@ impl EvalNode for ConstantRootNode {
     }
 }
 
+struct IfElseNode {
+    condition: Box<EvalNode>,
+    if_true: Box<EvalNode>,
+    if_false: Box<EvalNode>,
+}
+
+impl IfElseNode {
+    pub fn new(condition: Box<EvalNode>, if_true: Box<EvalNode>, if_false: Box<EvalNode>) -> Self {
+        Self {
+            condition: condition,
+            if_true: if_true,
+            if_false: if_false,
+        }
+    }
+}
+impl EvalNode for IfElseNode {
+    fn eval(&mut self, input: &mut DecisionDataset) -> NodeResult {
+        match self.condition.eval(input) {
+            NodeResult::Boolean(true) => self.if_true.eval(input),
+            NodeResult::Boolean(false) => self.if_false.eval(input),
+            _ => panic!("Condition does not return a boolean"),
+        }
+    }
+}
+
 struct BinOpNode {
     lvalue: Box<EvalNode>,
     rvalue: Box<EvalNode>,
@@ -55,8 +80,10 @@ pub fn deserialize_node(v: &Value) -> (Box<EvalNode>, bool) {
     } else if node_type == "input" {
         deserialize_input_node(v["value"].as_str().unwrap())
     } else {
-        match v["type"].as_str().unwrap() {
-            "op" => match v["op"].as_str().unwrap() {
+        let node_type = v["type"].as_str().unwrap();
+
+        if node_type == "op" {
+            return match v["op"].as_str().unwrap() {
                 "pow" => deserialize_bin_op_node(v, Box::new(PowerOperation {})),
                 ">=" => deserialize_bin_op_node(v, Box::new(GreaterThanOrEqualsOperation {})),
                 "<=" => deserialize_bin_op_node(v, Box::new(LessThanOrEqualsOperation {})),
@@ -70,12 +97,21 @@ pub fn deserialize_node(v: &Value) -> (Box<EvalNode>, bool) {
                     "Cannot deserialize: unknown operation {}",
                     v["op"].to_string()
                 )),
-            },
-            _ => panic!(format!(
-                "Cannot deserialize node type: {}",
-                v["type"].to_string()
-            )),
+            };
+        } else if node_type == "if" {
+            let (condition, condition_const) = deserialize_node(&v["condition"]);
+            let (if_true, if_true_const) = deserialize_node(&v["if_true"]);
+            let (if_false, if_false_const) = deserialize_node(&v["if_false"]);
+
+            return (
+                Box::from(IfElseNode::new(condition, if_true, if_false)),
+                condition_const && if_true_const && if_false_const,
+            );
         }
+        panic!(format!(
+            "Cannot deserialize node type: {}",
+            v["type"].to_string()
+        ));
     }
 }
 

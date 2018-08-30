@@ -4,17 +4,44 @@
     "module_name": "Predecline",
     "variables": [
         {
-            "name": "age-minus-18",
+            "name": "age-is-in-range",
             "definition": {
-                "type": "op",
-                "op": "-",
-                "lvalue": {
-                    "type": "input",
-                    "value": "application_data_v1.age"
+                "type": "if",
+                "condition": {
+                    "type": "op",
+                    "op": "&&",
+                    "lvalue": {
+                        "type": "op",
+                        "op": ">=",
+                        "lvalue": {
+                            "type": "constant",
+                            "value": 75
+                        },
+                        "rvalue": {
+                            "type": "input",
+                            "value": "application_data_v1.age"
+                        }
+                    },
+                    "rvalue": {
+                        "type": "op",
+                        "op": "<=",
+                        "lvalue": {
+                            "type": "constant",
+                            "value": 18
+                        },
+                        "rvalue": {
+                            "type": "input",
+                            "value": "application_data_v1.age"
+                        }
+                    }
                 },
-                "rvalue": {
+                "if_true": {
                     "type": "constant",
-                    "value": 18
+                    "value": true
+                },
+                "if_false": {
+                    "type": "constant",
+                    "value": false
                 }
             }
         }
@@ -30,38 +57,14 @@
                     "condition_id": "1",
                     "condition": {
                         "type": "op",
-                        "op": ">=",
+                        "op": "==",
                         "lvalue": {
                             "type": "constant",
-                            "value": 75
+                            "value": true
                         },
                         "rvalue": {
                             "type": "input",
-                            "value": "application_data_v1.age"
-                        }
-                    },
-                    "true": {
-                        "type": "goto",
-                        "value": "2"
-                    },
-                    "false": {
-                        "type": "return",
-                        "value": "REJECT"
-                    }
-                },
-                {
-                    "type": "condition",
-                    "condition_id": "2",
-                    "condition": {
-                        "type": "op",
-                        "op": ">=",
-                        "lvalue": {
-                            "type": "input",
-                            "value": "variables.age-minus-18"
-                        },
-                        "rvalue": {
-                            "type": "constant",
-                            "value": 0
+                            "value": "variables.age-is-in-range"
                         }
                     },
                     "true": {
