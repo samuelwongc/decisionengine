@@ -2,6 +2,23 @@
     "type": "module",
     "module_type": "all",
     "module_name": "Predecline",
+    "variables": [
+        {
+            "name": "age-minus-18",
+            "definition": {
+                "type": "op",
+                "op": "-",
+                "lvalue": {
+                    "type": "input",
+                    "value": "application_data_v1.age"
+                },
+                "rvalue": {
+                    "type": "constant",
+                    "value": 18
+                }
+            }
+        }
+    ],
     "children": [
         {
             "type": "rule",
@@ -40,11 +57,11 @@
                         "op": ">=",
                         "lvalue": {
                             "type": "input",
-                            "value": "application_data_v1.age"
+                            "value": "variables.age-minus-18"
                         },
                         "rvalue": {
                             "type": "constant",
-                            "value": 18
+                            "value": 0
                         }
                     },
                     "true": {

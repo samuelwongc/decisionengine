@@ -6,8 +6,10 @@ use decisionengine::datasource::experian::ExperianV1_0;
 use decisionengine::datasource::experian::ExperianV1_1;
 use decisionengine::datasource::mocks::decisiondatafetcher::{MockedExperianV1_0Fetcher,
                                                              MockedExperianV1_1Fetcher};
+use decisionengine::modules::Variable;
 use decisionengine::nodes::EvalNode;
 use decisionengine::nodes::NodeResult;
+use std::collections::HashMap;
 
 pub mod applicationdata;
 pub mod experian;
@@ -35,6 +37,8 @@ pub struct DecisionDataset {
 
     experian_v1_1: Option<ExperianV1_1>,
     experian_v1_1_fetcher: Box<DecisionDataFetcher<ApplicationDataV1, ExperianV1_1>>,
+
+    variables: HashMap<String, NodeResult>,
 }
 
 trait DecisionDataFetcher<D, R> {
@@ -49,6 +53,7 @@ impl DecisionDataset {
             experian_v1_0_fetcher: Box::from(MockedExperianV1_0Fetcher::test()),
             experian_v1_1: None,
             experian_v1_1_fetcher: Box::from(MockedExperianV1_1Fetcher::test()),
+            variables: HashMap::new(),
         }
     }
 
@@ -59,6 +64,7 @@ impl DecisionDataset {
             experian_v1_0_fetcher: Box::from(MockedExperianV1_0Fetcher::test()),
             experian_v1_1: None,
             experian_v1_1_fetcher: Box::from(MockedExperianV1_1Fetcher::test()),
+            variables: HashMap::new(),
         }
     }
 
@@ -85,6 +91,10 @@ impl DecisionDataset {
         }
         self.experian_v1_1.as_ref()
     }
+
+    pub fn get_variables(&mut self) -> &mut HashMap<String, NodeResult> {
+        &mut self.variables
+    }
 }
 
 pub fn deserialize_input_node(path: &str) -> (Box<EvalNode>, bool) {
@@ -92,8 +102,13 @@ pub fn deserialize_input_node(path: &str) -> (Box<EvalNode>, bool) {
     if path_parts.len() < 2 {
         panic!(format!("Input {} has length < 2", path))
     }
+    let prefix = path_parts.remove(0);
+
+    if prefix == "variables" {
+        return (Box::from(Variable::parse_node(&mut path_parts)), false);
+    }
     (
-        Box::from(match path_parts.remove(0) {
+        Box::from(match prefix {
             "experian_v1_0" => ExperianV1_0::parse_node(&mut path_parts),
             "experian_v1_1" => ExperianV1_1::parse_node(&mut path_parts),
             "application_data_v1" => ApplicationDataV1::parse_node(&mut path_parts),

@@ -38,6 +38,31 @@ impl BinaryOperation for AdditionOperation {
     }
 }
 
+pub struct SubtractionOperation {}
+
+impl BinaryOperation for SubtractionOperation {
+    fn eval(
+        &self,
+        lnode: &mut Box<EvalNode>,
+        rnode: &mut Box<EvalNode>,
+        inputs: &mut DecisionDataset,
+    ) -> NodeResult {
+        match lnode.eval(inputs) {
+            NodeResult::Numeric(l) => match rnode.eval(inputs) {
+                NodeResult::Numeric(r) => NodeResult::Numeric(l - r),
+                NodeResult::Boolean(_) => NodeResult::Err(String::from(
+                    "Expected int, got boolean during subtraction operation.",
+                )),
+                e => e,
+            },
+            NodeResult::Boolean(_) => NodeResult::Err(String::from(
+                "Expected int, got boolean during subtraction operation.",
+            )),
+            e => e,
+        }
+    }
+}
+
 pub struct EqualsOperation {}
 
 impl BinaryOperation for EqualsOperation {

@@ -123,8 +123,13 @@ fn decision(req: &mut Request) -> IronResult<Response> {
     }
 }
 
+fn test(req: &mut Request) -> IronResult<Response> {
+    Ok(Response::with((status::Ok, "Hello world!")))
+}
+
 fn server() {
     let mut router = Router::new();
+    router.get("/", test, "root");
     router.post("/decision", decision, "decision");
     router.post(
         "/decisionstrategy",

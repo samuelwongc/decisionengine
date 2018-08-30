@@ -15,7 +15,7 @@ pub mod schema;
 pub mod visitor;
 
 use decisionengine::datasource::DecisionDataset;
-use decisionengine::modules::PassAllModule;
+use decisionengine::modules::SimpleModule;
 use decisionengine::schema::decision_strategy;
 use decisionengine::visitor::DecisionTreeVisitor;
 use diesel::pg::PgConnection;
@@ -56,7 +56,7 @@ impl DecisionStrategy {
         self.decision_strategy_id
     }
 
-    pub fn get_module(&self) -> Box<PassAllModule> {
+    pub fn get_module(&self) -> Box<SimpleModule> {
         Box::from(self::modules::deserialize_module(
             &self.decision_strategy_json,
         ))
@@ -85,7 +85,7 @@ struct NewDecisionStrategy {
 pub struct DecisionEngine {}
 
 impl DecisionEngine {
-    pub fn from_file(file: &mut File) -> Box<PassAllModule> {
+    pub fn from_file(file: &mut File) -> Box<SimpleModule> {
         let mut serialized_decision_strategy = String::new();
         file.read_to_string(&mut serialized_decision_strategy)
             .expect("Something went wrong while reading the decision_strategy file");
@@ -99,5 +99,3 @@ impl DecisionEngine {
         Box::from(self::modules::deserialize_module(&decision_module_json))
     }
 }
-
-pub fn create() {}

@@ -1,5 +1,5 @@
 use decisionengine::datasource::DecisionDataset;
-use decisionengine::modules::PassAllModule;
+use decisionengine::modules::Module;
 use decisionengine::results::ModuleResult;
 use decisionengine::results::RuleResult;
 use decisionengine::results::SubmoduleResult;
@@ -11,9 +11,9 @@ use decisionengine::Evaluatable;
 use std;
 
 pub trait DecisionTreeVisitor {
-    fn visit_pass_all_module(&mut self, module: &mut PassAllModule);
+    fn visit_module<M: Module>(&mut self, module: &mut M);
     fn visit_rule(&mut self, rule: &mut Rule);
-    fn leave_pass_all_module(&mut self, module: &mut PassAllModule);
+    fn leave_module<M: Module>(&mut self, module: &mut M);
     fn leave_rule(&mut self, rule: &mut Rule);
     fn visit_condition(&mut self, condition: &Condition);
 }
@@ -90,12 +90,12 @@ impl ResultStack {
 }
 
 impl DecisionTreeVisitor for ResultAggregatingVisitor {
-    fn visit_pass_all_module(&mut self, module: &mut PassAllModule) {
+    fn visit_module<M: Module>(&mut self, module: &mut M) {
         self.stack
-            .new_module(module.module_name.clone(), module.eval(&mut self.input));
+            .new_module(module.module_name(), module.eval(&mut self.input));
     }
 
-    fn leave_pass_all_module(&mut self, _module: &mut PassAllModule) {
+    fn leave_module<M: Module>(&mut self, _module: &mut M) {
         self.stack.end_module();
     }
 

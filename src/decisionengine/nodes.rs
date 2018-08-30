@@ -62,6 +62,7 @@ pub fn deserialize_node(v: &Value) -> (Box<EvalNode>, bool) {
                 "<=" => deserialize_bin_op_node(v, Box::new(LessThanOrEqualsOperation {})),
                 "&&" => deserialize_bin_op_node(v, Box::new(AndOperation {})),
                 "+" => deserialize_bin_op_node(v, Box::new(AdditionOperation {})),
+                "-" => deserialize_bin_op_node(v, Box::new(SubtractionOperation {})),
                 "==" => deserialize_bin_op_node(v, Box::new(EqualsOperation {})),
                 "array_contains" => deserialize_bin_op_node(v, Box::new(ArrayContainsOperation {})),
                 "regex_contains" => deserialize_bin_op_node(v, Box::new(RegexContainsOperation {})),
